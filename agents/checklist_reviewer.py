@@ -1,6 +1,6 @@
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain_community.llms.solar import Solar
+from langchain_upstage import ChatUpstage
+from langchain_core.messages import HumanMessage
 import os
 from dotenv import load_dotenv
 
@@ -19,18 +19,17 @@ ChecklistReviewer_prompt = """
 """
 
 class ChecklistReviewer:
-    def __init__(self, llm_model="solar-pro", temperature=0.7):
+    def __init__(self, llm_model="solar-pro", api_key=None):
         """
         ChecklistReviewer 초기화
         :param llm_model: 사용할 LLM 모델 이름
-        :param temperature: LLM의 응답 다양성을 조정하는 파라미터
+        :param api_key: Upstage API 키
         """
-        self.llm = Solar(llm_model=llm_model, temperature=temperature, api_key=os.environ["SOLAR_API_KEY"])
+        self.llm = ChatUpstage(api_key=api_key or os.getenv("SOLAR_API_KEY"), model=llm_model)
         self.prompt_template = PromptTemplate(
-            input_variables=["checklists", "user_query"],
-            template=(ChecklistReviewer_prompt + "\n\n")
+            input_variables=["checklist", "user_query"],
+            template=ChecklistReviewer_prompt
         )
-        self.chain = LLMChain(llm=self.llm, prompt=self.prompt_template)
 
     def review_checklist(self, checklist: dict, user_query: str) -> list:
         """
@@ -42,11 +41,22 @@ class ChecklistReviewer:
         # 체크리스트를 문자열로 변환
         checklist_str = "\n".join([f"- {key}: {value}" for key, value in checklist.items()])
         
-        # LLMChain 실행
-        response = self.chain.run(checklist=checklist_str, user_query=user_query)
+        # 프롬프트 생성
+        prompt = self.prompt_template.format(
+            checklist=checklist_str, 
+            user_query=user_query
+        )
+        
+        # LLM 호출
+        messages = [HumanMessage(content=prompt)]
+        response = self.llm.invoke(messages)
         
         # 응답을 리스트로 변환
-        excluded_items = [item.strip() for item in response.split(",") if item.strip()]
+        try:
+            excluded_items = eval(response.content)  # JSON 형식의 응답을 리스트로 변환
+        except Exception as e:
+            raise ValueError(f"LLM 응답을 처리하는 중 오류 발생: {e}")
+        
         return excluded_items
 
 
@@ -57,7 +67,7 @@ if __name__ == "__main__":
         "항목2": 20,
         "항목3": 15
     }
-    user_query = "항목1에 대한 자세한 설명만 포함되어 있습니다."
+    user_query = "항목1과 항목2에 대한 평가를 중점적으로 보고 싶습니다."
 
     reviewer = ChecklistReviewer()
     excluded_items = reviewer.review_checklist(checklist, user_query)
