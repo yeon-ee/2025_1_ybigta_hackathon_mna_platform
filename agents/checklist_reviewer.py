@@ -15,7 +15,7 @@ ChecklistReviewer_prompt = """
     그리고 매수자의 요청은 다음과 같습니다:
     {user_query}
     체크리스트 항목 중에서 매수자의 요청에 포함된 정보가 부족한 항목을 제외하세요.
-    제외할 항목은 JSON 형식으로 반환하세요. 예: ['항목1', '항목2']
+    제외할 항목은 JSON 형식으로 반환하세요. 예: (excluded_items: ['항목1', '항목2'])
 """
 
 class ChecklistReviewer:
@@ -63,11 +63,14 @@ class ChecklistReviewer:
 # Example usage
 if __name__ == "__main__":
     checklist = {
-        "항목1": 10,
-        "항목2": 20,
-        "항목3": 15
+        "업종": 20,
+        "연매출": 15,
+        "투자유치": 25,
+        "부채비율": 30,
+        "영업이익률": 10,
+        "성장률": 15
     }
-    user_query = "항목1과 항목2에 대한 평가를 중점적으로 보고 싶습니다."
+    user_query = "헬스케어 산업에 종사하는, 연매출 100억 이상, 최근 1년 투자금 100억 이상, 작년 성장률 25% 이상, 영업이익률 10% 이상인 기업을 찾고 있습니다."
 
     reviewer = ChecklistReviewer()
     excluded_items = reviewer.review_checklist(checklist, user_query)
