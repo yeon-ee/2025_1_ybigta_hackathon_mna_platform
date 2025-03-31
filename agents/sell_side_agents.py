@@ -28,6 +28,10 @@ class SellSideAgent:
         """
         self.db_stub = db_stub
         self.llm = ChatUpstage(api_key=api_key or os.getenv("SOLAR_API_KEY"), model=llm_model)
+        self.prompt_template = PromptTemplate(
+            input_variables=["company_name", "company_data", "checklist"],
+            template=SellSideAgent_prompt
+        )
 
     def fetch_company_data(self, company_name: str) -> str:
         """
@@ -53,7 +57,11 @@ class SellSideAgent:
         checklist_str = "\n".join([f"- {key}: {value}" for key, value in checklist.items()])
         
         # 프롬프트 생성
-        prompt = SellSideAgent_prompt.format(company_name=company_name, company_data=company_data, checklist=checklist_str)
+        prompt = self.prompt_template.format(
+            company_name=company_name,
+            company_data=company_data,
+            checklist=checklist_str
+        )
         
         # LLM 호출
         messages = [HumanMessage(content=prompt)]
