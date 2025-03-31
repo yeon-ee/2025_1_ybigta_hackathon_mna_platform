@@ -70,12 +70,14 @@ class ChecklistInspector:
 # Example usage
 if __name__ == "__main__":
     checklist = {
-        "항목1": 10,
-        "항목2": 20,
-        "항목3": 15
+        "업종": 20,
+        "연매출": 15,
+        "투자유치": 25,
+        "부채비율": 30,
+        "영업이익률": 10
     }
-    sellside_context = "항목1, 항목3은 만족하지만, 항목2는 만족하지 않습니다."
-    user_query = "항목1과 항목2에 대한 평가를 중점적으로 보고 싶습니다."
+    sellside_context = "생성된 컨텍스트: 동연컴퍼니의 업종은 교육 서비스로, PT 강사 매칭 플랫폼을 운영하고 있습니다. 2023년 매출은 1,235,604,450원이며, 최근 3년 연평균 성장률은 30%입니다. 2022년 6월에는 200억원의 투자금을 유치했습니다. 그러나 총 부채는 1,500억원이며, 자기자본은 500억원으로 부채비율은 300%입니다. 안타깝게도 영업이익률은 제공된 데이터에 포함되어 있지 않습니다."
+    user_query = "헬스케어 산업에 종사하는, 연매출 100억 이상, 최근 1년 투자금 100억 이상, 작년 성장률 25% 이상, 영업이익률 10% 이상인 기업을 찾고 있습니다."
 
     inspector = ChecklistInspector()
     scores, total_score = inspector.inspect_checklist(checklist, sellside_context, user_query)
