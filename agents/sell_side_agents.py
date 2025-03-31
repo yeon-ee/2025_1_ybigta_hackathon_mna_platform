@@ -6,6 +6,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+SellSideAgent_prompt = """
+    당신은 당신의 기업 {company_name}의 회계, 재무, 세무, 법률, 인사, IT 등 다양한 분야에 대한 전문가입니다.
+    당신은 당신의 기업 {company_name}의 M&A 기업 평가를 위한 체크리스트 평가를 위한 컨텍스트를 생성하는 역할을 맡고 있습니다.
+    다음은 당신의 회사에 대한 데이터입니다:
+    {company_data}
+    그리고 다음은 평가를 위한 체크리스트입니다:
+    {checklist}
+    이 데이터를 기반으로 체크리스트 평가에 필요한 컨텍스트를 생성하세요.
+    컨텍스트는 평가자가 체크리스트를 평가할 수 있도록 충분히 구체적이어야 합니다.
+    또한 주어진 데이터를 기반으로 한 정확한 사실만을 담아야 합니다.
+"""
+
 class SellSideAgent:
     def __init__(self, db_stub, llm_model="solar-pro", temperature=0.7):
         """
@@ -18,14 +30,7 @@ class SellSideAgent:
         self.llm = Solar(llm_model=llm_model, temperature=temperature, api_key=os.environ["SOLAR_API_KEY"])
         self.context_prompt = PromptTemplate(
             input_variables=["company_data", "checklist"],
-            template=(
-                "다음은 회사에 대한 데이터입니다:\n"
-                "{company_data}\n\n"
-                "그리고 다음은 평가를 위한 체크리스트입니다:\n"
-                "{checklist}\n\n"
-                "이 데이터를 기반으로 체크리스트 평가에 필요한 컨텍스트를 생성하세요. "
-                "컨텍스트는 평가자가 체크리스트를 평가할 수 있도록 충분히 구체적이어야 합니다."
-            )
+            template=(SellSideAgent_prompt + "\n\n")
         )
         self.context_chain = LLMChain(llm=self.llm, prompt=self.context_prompt)
 
@@ -71,11 +76,11 @@ def db_stub(company_name: str) -> str:
 # Example usage
 if __name__ == "__main__":
     checklist = {
-        "재무 안정성": 10,
-        "시장 점유율": 20,
-        "제품 경쟁력": 15
+        "항목1": 10,
+        "항목2": 20,
+        "항목3": 15
     }
-    company_name = "ABC Corp"
+    company_name = "동연컴퍼니"
 
     agent = SellSideAgent(db_stub=db_stub)
     context = agent.generate_context(company_name, checklist)
