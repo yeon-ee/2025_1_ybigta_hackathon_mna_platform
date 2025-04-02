@@ -28,7 +28,7 @@ class SellSideAgent:
         :param api_key: Upstage API 키
         """
         self.db_stub = db_stub
-        self.llm = ChatUpstage(api_key=api_key or os.getenv("SOLAR_API_KEY"), model=llm_model)
+        self.llm = ChatUpstage(api_key=api_key or os.getenv("SOLAR_API_KEY"), model=llm_model, max_tokens=2000)
         self.prompt_template = PromptTemplate(
             input_variables=["company_name", "company_data", "checklist_keys"],
             template=SellSideAgent_prompt

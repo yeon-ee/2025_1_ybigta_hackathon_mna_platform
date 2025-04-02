@@ -27,7 +27,7 @@ class ChecklistInspector:
         :param llm_model: 사용할 LLM 모델 이름
         :param api_key: Upstage API 키
         """
-        self.llm = ChatUpstage(api_key=api_key or os.getenv("SOLAR_API_KEY"), model=llm_model)
+        self.llm = ChatUpstage(api_key=api_key or os.getenv("SOLAR_API_KEY"), model=llm_model, max_tokens=500)
         self.prompt_template = PromptTemplate(
             input_variables=["checklist", "sellside_context", "user_query"],
             template=ChecklistInspector_prompt
