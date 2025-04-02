@@ -73,6 +73,6 @@ def process_company_data(file_path: str):
     print(f"임베딩이 저장된 파일: company_embeddings.json")
 
 if __name__ == "__main__":
-    # process_company_data('inno_company_test.json')
+    process_company_data('inno_company_with_ev_financial.json')
     # test_json_to_text('inno_company_with_ev_financial.json')
-    save_vectors_test('company_embeddings.json')
+    # save_vectors_test('company_embeddings.json')
