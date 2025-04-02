@@ -71,9 +71,9 @@ def save_vectors_test(json_file_path):
         print(f"벡터 저장 중 오류 발생: {str(e)}")
 
 
-def search_similar_companies(query_embedding, host="localhost", port=8000, top_k=5):
+def search_similar_companies(query_embedding, top_k=5):
     """유사한 회사 검색"""
-    collection = connect_to_vector_db(host=host, port=port)
+    collection = connect_to_vector_db()
     results = collection.query(
         query_embeddings=[query_embedding],
         n_results=top_k
