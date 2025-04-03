@@ -102,18 +102,109 @@ with tab2:
 
     with col3:
         st.subheader("추가 정보 입력")
-        # 여기에 추가 필드들이 들어갈 예정
-        st.info("추가 필드는 곧 업데이트될 예정입니다")
+
+        # 기업명
+        company_name = st.text_input("기업명")
+
+        # 카테고리 선택
+        category = st.selectbox(
+            "카테고리",
+            options=[
+                "모빌리티/교통",
+                "금융/보험/핀테크",
+                "AI/딥테크/블록체인",
+                "커머스",
+                "교육",
+                "부동산/건설",
+                "헬스케어",
+                "F&B",
+                "콘텐츠"
+            ]
+        )
+
+        # 주요정보 섹션
+        st.subheader("주요정보")
+
+        # 금액 관련 정보 (억 단위)
+        capital = st.number_input("자본금 (억 원)", min_value=0, value=0)
+        investment = st.number_input("누적투자유치금액 (억 원)", min_value=0, value=0)
+        investment_count = st.number_input("투자유치건수", min_value=0, value=0)
+        annual_sales = st.number_input("연매출 (억 원)", min_value=0, value=0)
+
+        # 기술등급 입력
+        st.subheader("기술등급")
+        st.caption("각 등급별 특허 개수를 입력하세요")
+        tech_grade_count = st.number_input("특허 개수 입력", min_value=0, value=0)
+
+
+        # 기술등급 변환 함수
+        def convert_to_tech_grade(count):
+            if count >= 8:
+                return "A+"
+
+            grade_map = {
+                8: "A+",
+                7: "A0",
+                6: "A-",
+                5: "B+",
+                4: "B0",
+                3: "B-",
+                2: "C"
+            }
+            return grade_map.get(count, "C")  # 기본값 C
 
     # 저장 버튼은 컬럼 밖에 배치
     if st.button("저장", type="primary"):
-        if non_financial_pdfs and financial_pdf:
-            try:
-                result, metadata = extract_company_info(non_financial_pdfs, financial_pdf, {})
-                st.success("성공적으로 저장되었습니다!")
-                st.json(metadata)
-            except Exception as e:
-                st.error(f"저장 중 오류가 발생했습니다: {str(e)}")
-        else:
-            st.warning("모든 필수 파일을 업로드해주세요.")
+        # 모든 필수 입력값 확인
+        if not non_financial_pdfs:
+            st.warning("비재무 PDF 파일을 업로드해주세요.")
+            st.stop()
+
+        if not financial_pdf:
+            st.warning("재무 PDF 파일을 업로드해주세요.")
+            st.stop()
+
+        if not company_name:
+            st.warning("기업명을 입력해주세요.")
+            st.stop()
+
+        if capital <= 0:
+            st.warning("자본금을 입력해주세요.")
+            st.stop()
+
+        if investment <= 0:
+            st.warning("누적투자유치금액을 입력해주세요.")
+            st.stop()
+
+        if investment_count <= 0:
+            st.warning("투자유치건수를 입력해주세요.")
+            st.stop()
+
+        if annual_sales <= 0:
+            st.warning("연매출을 입력해주세요.")
+            st.stop()
+
+        if tech_grade_count <= 0:
+            st.warning("특허 개수를 입력해주세요.")
+            st.stop()
+
+        try:
+            # 입력 데이터를 딕셔너리로 구성
+            tech_grade = convert_to_tech_grade(tech_grade_count)
+            user_input = {
+                "company_name": company_name,
+                "category": category,
+                "capital": capital,
+                "investment": investment,
+                "investment_count": investment_count,
+                "annual_sales": annual_sales,
+                "tech_grade": tech_grade
+            }
+
+            result, metadata = extract_company_info(non_financial_pdfs, financial_pdf, user_input)
+            st.success("성공적으로 저장되었습니다!")
+            st.json(metadata)
+        except Exception as e:
+            st.error(f"저장 중 오류가 발생했습니다: {str(e)}")
+
 
