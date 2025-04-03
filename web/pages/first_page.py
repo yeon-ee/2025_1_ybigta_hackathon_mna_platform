@@ -1,3 +1,5 @@
+import chromadb
+from chromadb import Settings
 import streamlit as st
 import json
 import os
@@ -6,6 +8,10 @@ import sys
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.append(project_root)
 
+web_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+chroma_path = os.path.join(web_root, "db", "chroma_data")
+
+from web.db.vector_db import connect_to_vector_db
 from web.utils.report import process_input_to_report
 from web.utils.save_factory import save_image_to_vector_db
 
@@ -15,6 +21,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+
+if 'chroma_collection' not in st.session_state:
+    st.session_state.chroma_collection = connect_to_vector_db()
 
 # Streamlit에서 UI 생성
 st.title("M&A_Agent")
@@ -37,6 +46,15 @@ with tab1:
         user_input = st.text_input("검색할 문자열을 입력하세요:")
         if st.button("검색"):
             if user_input:
+                # # 디버깅 정보 출력
+                # st.write(f"현재 작업 디렉토리: {os.getcwd()}")
+                # st.write(f"프로젝트 루트: {project_root}")
+                #
+                # # ChromaDB 경로 확인
+                # chroma_path = os.path.join(project_root, "chroma_data")
+                # st.write(f"ChromaDB 경로: {chroma_path}")
+                # st.write(f"ChromaDB 경로 존재?: {os.path.exists(chroma_path)}")
+
                 st.session_state.search_result = process_input_to_report(user_input)
                 st.session_state.search_completed = True
                 st.rerun()  # st.experimental_rerun() 대신 st.rerun() 사용
