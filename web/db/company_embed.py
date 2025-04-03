@@ -5,8 +5,8 @@ load_dotenv()
 from openai import OpenAI, api_key
 import json
 import os
-from embedding.utils.json_to_text import json_to_text, test_json_to_text
-from embedding.utils.vector_db import save_to_vector_db, save_vectors_test, search_similar_companies
+from web.db.utils.json_to_text import json_to_text, test_json_to_text
+from web.db.vector_db import save_to_vector_db, save_vectors_test, search_similar_companies
 
 # OpenAI 클라이언트 초기화
 upstage_api_key = os.getenv('UPSTAGE_API_KEY')
@@ -68,7 +68,7 @@ def process_company_data(file_path: str):
 
     # JSON 형식으로 저장
     embeddings_data = {
-        company_name: embedding  # embedding이 이미 리스트이므로 tolist() 제거
+        company_name: embedding
         for company_name, embedding in zip(company_names, embeddings)
     }
 
@@ -83,16 +83,29 @@ def process_company_data(file_path: str):
     print(f"성공적으로 처리된 회사 수: {processed_count}")
     print(f"임베딩이 저장된 파일: company_embeddings.json")
 
+def get_matching_company(query: str, top_k: int = 5):
+    # 1. 임베딩
+    print("query: " + query)
+    query_embedding = get_query_embedding(query)
+    # print("query embedding: " + query_embedding.__str__())
+
+    # 2. 유사 회사 검색
+    results = search_similar_companies(query_embedding, top_k)
+    # print(results['metadatas'][0])
+
+    return results['metadatas'][0]
+
 def test_get_matching_company():
     """여러 쿼리로 유사 회사 매칭 테스트"""
 
     # 다양한 테스트 쿼리들
     test_queries = [
-        "인공지능 솔루션을 개발하는 스타트업",
-        "반도체 설계 전문 기업",
-        "바이오 의약품 연구개발 회사",
-        "데이터 분석 플랫폼 기업",
-        "클라우드 서비스 제공 기업"
+        "투자단계는 무조건 series A 이상이면 좋겠어. 그런데 소재지는 가급적 서울이면 좋겠어. EV 규모는 700억 이하가 되어야만 해."
+        # "인공지능 솔루션을 개발하는 스타트업",
+        # "반도체 설계 전문 기업",
+        # "바이오 의약품 연구개발 회사",
+        # "데이터 분석 플랫폼 기업",
+        # "클라우드 서비스 제공 기업"
     ]
 
     try:
@@ -108,6 +121,7 @@ def test_get_matching_company():
             # 3. 회사 목록 출력
             print("검색된 회사들:")
             companies = results['metadatas'][0]
+            # print(companies)
             for i, company in enumerate(companies, 1):
                 print(f"{i}. {company.get('company_name', '이름 없음')}")
 

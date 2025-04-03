@@ -1,18 +1,24 @@
 import uuid
 import chromadb
 import json
+import os
 
 def connect_to_vector_db():
     """ChromaDB 로컬 클라이언트 설정"""
     try:
-        # PersistentClient로 변경 (서버 불필요)
-        client = chromadb.PersistentClient(path="./chroma_data")
+        # 프로젝트 루트 경로 찾기
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        db_path = os.path.join(project_root, "db", "chroma_data")
+
+        print(f"ChromaDB 경로: {db_path}")
+        client = chromadb.PersistentClient(path=db_path)
 
         print("로컬 DB 연결 성공!")
+        print(f"현재 작업 디렉토리: {os.getcwd()}")
 
-        # 컬렉션이 없으면 생성, 있으면 가져오기
         try:
             collection = client.get_collection("company_embeddings")
+            print(f"컬렉션 데이터 수: {collection.count()}")
         except:
             collection = client.create_collection(
                 name="company_embeddings",
@@ -24,6 +30,7 @@ def connect_to_vector_db():
     except Exception as e:
         print(f"ChromaDB 연결 실패: {str(e)}")
         raise
+
 
 def save_to_vector_db(company_names: list, embeddings: list) -> None:
     """임베딩 벡터를 ChromaDB에 저장하는 함수"""
