@@ -46,7 +46,7 @@ def calc_profitability(operating_income, net_income, sales):
 # ----------------------------
 # 기업별 재무비율 및 수익성 등급 삽입
 # ----------------------------
-for company in data:
+for company in data.values():
     sales = parse_amount(company.get("손익", {}).get("매출액", {}).get("2023", "0"))
     sales_2022 = parse_amount(company.get("손익", {}).get("매출액", {}).get("2022", "0"))
     operating_income = parse_amount(company.get("손익", {}).get("영업이익", {}).get("2023", "0"))
