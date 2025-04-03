@@ -276,7 +276,7 @@ def add_new_company(pdf_path, user_input, company_name=None, company_info=None):
         print("   ✓ 새 기업 정보 생성 완료")
         
         # 기업 목록에 추가
-        companies.append(new_company)
+        companies[company_name] = new_company
         
         print("6. 업데이트된 데이터 저장 중...")
         # 업데이트된 데이터 저장
