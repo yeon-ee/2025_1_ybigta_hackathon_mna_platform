@@ -13,7 +13,7 @@ chroma_path = os.path.join(web_root, "db", "chroma_data")
 
 from web.db.vector_db import connect_to_vector_db
 from web.utils.report import process_input_to_report
-from web.utils.save_company import save_image_to_vector_db
+from web.utils.save_company import extract_company_info
 
 st.set_page_config(
     page_title="M&A_Agent",
@@ -75,11 +75,45 @@ with tab1:
 with tab2:
     st.header("매도자 페이지")
 
-    uploaded_image = st.file_uploader("이미지를 업로드하세요:", type=["png", "jpg", "jpeg"])
+    # 3개의 컬럼 생성
+    col1, col2, col3 = st.columns(3)
 
-    if st.button("저장"):
-        if uploaded_image:
-            save_status = save_image_to_vector_db(uploaded_image)
-            st.success(save_status)
+    with col1:
+        st.subheader("비재무 PDF 파일")
+        non_financial_pdfs = st.file_uploader(
+            "비재무 PDF 파일들을 업로드하세요",
+            type=["pdf"],
+            accept_multiple_files=True
+        )
+        if non_financial_pdfs:
+            st.success(f"{len(non_financial_pdfs)}개의 파일이 업로드됨")
+            for pdf in non_financial_pdfs:
+                st.write(f"📄 {pdf.name}")
+
+    with col2:
+        st.subheader("재무 PDF 파일")
+        financial_pdf = st.file_uploader(
+            "재무 PDF 파일을 업로드하세요",
+            type=["pdf"],
+            accept_multiple_files=False
+        )
+        if financial_pdf:
+            st.success(f"파일 업로드됨: {financial_pdf.name}")
+
+    with col3:
+        st.subheader("추가 정보 입력")
+        # 여기에 추가 필드들이 들어갈 예정
+        st.info("추가 필드는 곧 업데이트될 예정입니다")
+
+    # 저장 버튼은 컬럼 밖에 배치
+    if st.button("저장", type="primary"):
+        if non_financial_pdfs and financial_pdf:
+            try:
+                result, metadata = extract_company_info(non_financial_pdfs, financial_pdf, {})
+                st.success("성공적으로 저장되었습니다!")
+                st.json(metadata)
+            except Exception as e:
+                st.error(f"저장 중 오류가 발생했습니다: {str(e)}")
         else:
-            st.error("이미지를 업로드하세요!")
+            st.warning("모든 필수 파일을 업로드해주세요.")
+
