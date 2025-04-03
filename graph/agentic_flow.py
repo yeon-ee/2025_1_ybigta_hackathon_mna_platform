@@ -4,32 +4,32 @@ import json
 from graph import create_workflow
 
 def agentic_flow(company_name: str, user_query: str, checklist: dict) -> dict:
-    # 워크플로우 생성
-    app = create_workflow()
-    
-    # 실행 설정
-    config = RunnableConfig(recursion_limit=10, configurable={"thread_id": random_uuid()})
-    
-    # 초기 상태 설정
-    inputs = {
-        "messages": [],
-        "score": {},
-        "comment": {},
-        "sender": "",
-        "company_name": company_name,
-        "user_query": user_query,
-        "checklist": checklist,
-    }
-    
-    # 워크플로우 실행
-    result = app.invoke(inputs, config)
-    try: 
+    try:
+        # 워크플로우 생성
+        app = create_workflow()
+        
+        # 실행 설정
+        config = RunnableConfig(recursion_limit=10, configurable={"thread_id": random_uuid()})
+        
+        # 초기 상태 설정
+        inputs = {
+            "messages": [],
+            "score": {},
+            "comment": {},
+            "sender": "",
+            "company_name": company_name,
+            "user_query": user_query,
+            "checklist": checklist,
+        }
+        
+        # 워크플로우 실행
+        result = app.invoke(inputs, config)
         result = json.loads(result["messages"][-1].content)
-    except json.JSONDecodeError:
-        print("Error: JSON decoding failed.")
+    except Exception as e:
+        print("Error: e")
         return {
             "score": {"항목": 0},
-            "comment": {"항목": "JSON decoding failed."},
+            "comment": {"항목": "Error"},
         }
     print("Result:", result)
     return result
