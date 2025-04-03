@@ -22,3 +22,8 @@ llm_c = ChatOpenAI(
     temperature=0.01,
     max_tokens=2000,
 ) 
+
+# from langchain_upstage import ChatUpstage
+# llm_a = ChatUpstage(api_key=os.getenv("SOLAR_API_KEY"), model='solar-pro', temperature=0.1)
+# llm_b = ChatUpstage(api_key=os.getenv("SOLAR_API_KEY"), model='solar-pro', temperature=0.1)
+# llm_c = ChatUpstage(api_key=os.getenv("SOLAR_API_KEY"), model='solar-pro', temperature=0.1)
