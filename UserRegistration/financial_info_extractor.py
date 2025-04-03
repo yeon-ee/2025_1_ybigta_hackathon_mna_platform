@@ -4,6 +4,7 @@ import os
 from openai import OpenAI
 from pathlib import Path
 from dotenv import load_dotenv
+import subprocess
 
 # .env 파일 로드
 load_dotenv()
@@ -163,8 +164,25 @@ def format_financial_data(raw_data):
     
     return formatted_data
 
-def add_new_company(pdf_path, company_name, company_info=None):
-    """새로운 기업을 inno_company.json에 추가"""
+def get_user_input(prompt, allow_empty=True):
+    """사용자 입력을 받는 헬퍼 함수"""
+    while True:
+        value = input(prompt).strip()
+        if value or allow_empty:
+            return value if value else ""
+        print("이 필드는 필수입니다. 다시 입력해주세요.")
+
+def get_list_input(prompt):
+    """리스트 형태의 입력을 받는 헬퍼 함수"""
+    print(prompt)
+    print("(여러 항목은 쉼표로 구분하여 입력하세요. 입력을 마치려면 엔터를 누르세요)")
+    value = input("> ").strip()
+    if not value:
+        return []
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+def add_new_company(pdf_path, company_name=None, company_info=None):
+    """새로운 기업을 inno_company.json에 추가하고 기업가치를 계산"""
     
     print(f"\n=== 기업 정보 추출 시작 ===")
     print(f"PDF 파일: {pdf_path}")
@@ -189,36 +207,80 @@ def add_new_company(pdf_path, company_name, company_info=None):
         
         # inno_company.json 파일 읽기
         print("4. 기존 기업 데이터 로딩 중...")
-        with open('Dataset/inno_company.json', 'r', encoding='utf-8') as f:
+        inno_company_path = 'Dataset/inno_company.json'
+        with open(inno_company_path, 'r', encoding='utf-8') as f:
             companies = json.load(f)
         print("   ✓ 기존 데이터 로딩 완료")
         
-        # company_info가 None인 경우 빈 딕셔너리로 초기화
+        print("\n=== 기업 정보 입력 ===")
         if company_info is None:
             company_info = {}
         
-        print("5. 새 기업 정보 생성 중...")
+        if company_name is None:
+            company_name = get_user_input("기업명: ", allow_empty=False)
+        
+        # 기본 정보 입력
+        url = get_user_input("기업 URL: ")
+        intro = get_user_input("기업 소개: ")
+        listing = get_user_input("상장여부 (상장/비상장): ")
+        founded_date = get_user_input("설립일 (YYYY-MM-DD): ")
+        website = get_user_input("홈페이지 URL: ")
+        address = get_user_input("주소: ")
+        categories = get_list_input("카테고리 (예: 금융/보험/핀테크, AI/딥테크/블록체인)")
+        
+        # 투자 정보 입력
+        print("\n=== 투자 정보 입력 ===")
+        investment_stage = get_user_input("최종투자단계 (예: Series A, Pre-A): ")
+        investment_amount = get_user_input("누적투자유치금액 (예: 100억원): ")
+        investment_count = get_user_input("투자유치건수: ")
+        
+        # 투자 이력 입력
+        investment_history = []
+        print("\n투자유치이력 입력 (완료하려면 빈 줄 입력)")
+        while True:
+            date = get_user_input("\n투자일자 (YYYY-MM-DD) [입력 완료: 엔터]: ")
+            if not date:
+                break
+            stage = get_user_input("투자단계: ")
+            amount = get_user_input("투자금액: ")
+            investors = get_list_input("투자자 (쉼표로 구분)")
+            
+            if date:  # 날짜가 입력된 경우에만 이력 추가
+                investment_history.append({
+                    "날짜": date,
+                    "단계": stage,
+                    "금액": amount,
+                    "투자자": investors
+                })
+        
+        # 보도자료 URL 입력
+        news_urls = get_list_input("\n보도자료 URL (쉼표로 구분)")
+        
+        # 특허 목록 입력
+        patents = get_list_input("\n특허명칭 (쉼표로 구분)")
+        
+        print("\n5. 새 기업 정보 생성 중...")
         # 새 기업 정보 생성
         new_company = {
-            "url": company_info.get("url", ""),
-            "기업명": company_name if company_name else "",
-            "기업소개": company_info.get("소개", ""),
-            "상장여부": company_info.get("상장여부", ""),
-            "설립일": company_info.get("설립일", ""),
-            "홈페이지": company_info.get("웹사이트", ""),
-            "주소": company_info.get("주소", ""),
-            "카테고리": company_info.get("카테고리", []),
+            "url": url or company_info.get("url", ""),
+            "기업명": company_name,
+            "기업소개": intro or company_info.get("소개", ""),
+            "상장여부": listing or company_info.get("상장여부", ""),
+            "설립일": founded_date or company_info.get("설립일", ""),
+            "홈페이지": website or company_info.get("웹사이트", ""),
+            "주소": address or company_info.get("주소", ""),
+            "카테고리": categories or company_info.get("카테고리", []),
             "주요정보": company_info.get("주요정보", {}),
-            "투자유치정보": company_info.get("투자유치정보", {
-                "최종투자단계": "",
-                "누적투자유치금액": "",
-                "투자유치건수": "",
-                "투자유치이력": []
-            }),
+            "투자유치정보": {
+                "최종투자단계": investment_stage,
+                "누적투자유치금액": investment_amount,
+                "투자유치건수": investment_count,
+                "투자유치이력": investment_history
+            },
             "손익": formatted_result['손익'],
             "재무": formatted_result['재무'],
-            "보도자료": company_info.get("보도자료", []),
-            "특허명칭리스트": company_info.get("특허", [])
+            "보도자료": news_urls or company_info.get("보도자료", []),
+            "특허명칭리스트": patents or company_info.get("특허", [])
         }
         print("   ✓ 새 기업 정보 생성 완료")
         
@@ -227,22 +289,82 @@ def add_new_company(pdf_path, company_name, company_info=None):
         
         print("6. 업데이트된 데이터 저장 중...")
         # 업데이트된 데이터 저장
-        with open('Dataset/inno_company.json', 'w', encoding='utf-8') as f:
+        with open(inno_company_path, 'w', encoding='utf-8') as f:
             json.dump(companies, f, ensure_ascii=False, indent=2)
         print("   ✓ 데이터 저장 완료")
         
-        print(f"\n✅ 성공: {company_name if company_name else '새로운 기업'} 추가 완료")
+        print("7. 기업가치 계산 및 재무비율 분석 중...")
+        try:
+            # 프로젝트 루트 디렉토리 경로 계산
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.dirname(current_dir)  # UserRegistration의 상위 디렉토리가 프로젝트 루트
+            
+            # enterprise_value.py와 enterprise_enrichment.py 경로
+            enterprise_value_path = os.path.join(project_root, 'preprocess', 'enterprise_value.py')
+            enterprise_enrichment_path = os.path.join(project_root, 'preprocess', 'enterprise_enrichment.py')
+            
+            if not os.path.exists(enterprise_value_path):
+                raise FileNotFoundError(f"enterprise_value.py를 찾을 수 없습니다: {enterprise_value_path}")
+            if not os.path.exists(enterprise_enrichment_path):
+                raise FileNotFoundError(f"enterprise_enrichment.py를 찾을 수 없습니다: {enterprise_enrichment_path}")
+            
+            # 현재 작업 디렉토리를 프로젝트 루트로 변경
+            original_dir = os.getcwd()
+            os.chdir(project_root)
+            
+            try:
+                # 1. 기업가치 계산
+                print("   1) 기업가치 계산 중...")
+                result = subprocess.run(
+                    ['python', enterprise_value_path], 
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+                print("      ✓ 기업가치 계산 완료")
+                if result.stdout:
+                    print(f"      출력: {result.stdout}")
+                    
+                # 2. 재무비율 분석
+                print("   2) 재무비율 분석 중...")
+                result = subprocess.run(
+                    ['python', enterprise_enrichment_path],
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+                print("      ✓ 재무비율 분석 완료")
+                if result.stdout:
+                    print(f"      출력: {result.stdout}")
+                    
+            finally:
+                os.chdir(original_dir)
+                
+        except FileNotFoundError as e:
+            print(f"   ⚠️ 파일 찾기 오류: {str(e)}")
+            return False
+        except subprocess.CalledProcessError as e:
+            print(f"   ⚠️ 처리 중 오류 발생: {str(e)}")
+            if e.stdout:
+                print(f"   출력: {e.stdout}")
+            if e.stderr:
+                print(f"   에러: {e.stderr}")
+            return False
+        
+        print(f"\n✅ 성공: {company_name} 추가 및 기업가치 계산 완료")
         return True
         
     except Exception as e:
         print(f"\n❌ 오류 발생: {str(e)}")
         return False
 
-# 메인 실행 코드 수정
+# 메인 실행 코드
 if __name__ == "__main__":
     print("\n=== 기업 정보 추출 프로그램 시작 ===")
-    # 새 기업 추가 테스트 (company_info와 company_name 모두 None으로 설정)
-    success = add_new_company("Dataset/meatbox/meatbox_finance.pdf", None, None)
+    # 고정된 파일 경로 사용
+    pdf_path = "Dataset/meatbox/meatbox_finance.pdf"
+    
+    success = add_new_company(pdf_path)
     
     if success:
         print("\n프로그램이 성공적으로 완료되었습니다.")
