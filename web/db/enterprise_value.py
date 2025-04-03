@@ -100,7 +100,7 @@ def estimate_ev(company):
 # ----------------------------
 # EV 삽입
 # ----------------------------
-for company in data:
+for company in data.values():
     final_ev, base_multiple, investment_multiple, sales_ev, investment_ev, growth_rate, sales, investment, method = estimate_ev(company)
     if final_ev > 0:
         company["기업가치"] = {
