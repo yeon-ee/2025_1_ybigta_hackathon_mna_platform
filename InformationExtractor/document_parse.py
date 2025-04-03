@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from langchain.prompts import PromptTemplate
 from langchain_upstage import ChatUpstage
 from langchain_core.messages import HumanMessage
+from typing import List
 
 # Load environment variables from .env file
 load_dotenv()
@@ -19,9 +20,11 @@ if not api_key:
     raise ValueError("SOLAR_API_KEY environment variable is not set")
 
 DocumentSummarizer_prompt = """
-    당신은 문서 요약 전문가입니다.
-    주어진 문서의 내용을 분석하여 핵심적인 내용만 간단히 요약해주세요.
-    불필요한 설명은 제외하고 중요한 내용만 추출하여 알기 쉽게 정리해주세요.
+    당신은 한국 중소기업 전문 M&A 중개인으로써 기업의 비재무적인 요인을 분석하는 데 탁월한 능력을 인정받는 전문가입니다. 
+    매각 희망사가 당신에게 제공되는 문서(들)의 비재무적인 내용을 요약하고 재구성하여 M&A 리포트를 작성해주세요. 
+    다만 주장에는 근거를 반드시 작성해주시고 중복되는 내용도 없고 생략되는 내용도 없게 작성 부탁드립니다. 
+
+    쓰잘데기 없는 말 덧붙이지 마. 한국어로 말해.
 
     문서 내용:
     {document_content}
@@ -66,43 +69,42 @@ class DocumentSummarizer:
                 return json_response["content"].get("html", "")
         return ""
 
-    def summarize(self, document_content: str) -> str:
+    def process_documents(self, filenames: List[str]) -> str:
         """
-        문서 내용 요약
-        :param document_content: 요약할 문서 내용
-        :return: 요약된 내용
-        """
-        # HTML 태그 제거
-        if document_content.strip().startswith('<'):
-            soup = BeautifulSoup(document_content, 'html.parser')
-            document_content = soup.get_text(separator='\n', strip=True)
-
-        # 프롬프트 생성
-        prompt = self.prompt_template.format(document_content=document_content)
-        
-        # LLM 호출
-        messages = [HumanMessage(content=prompt)]
-        response = self.llm.invoke(messages)
-        
-        return response.content
-
-    def process_document(self, filename: str) -> str:
-        """
-        문서 처리 및 요약 전체 프로세스
-        :param filename: PDF 파일 경로
+        여러 문서 처리 및 요약 전체 프로세스
+        :param filenames: PDF 파일 경로 리스트
         :return: 요약된 내용
         """
         try:
             print("1. 문서 내용 추출 중...")
-            document_content = self.extract_document_content(filename)
+            all_content = []
             
-            if not document_content:
-                raise ValueError("문서 내용을 추출할 수 없습니다.")
+            # 모든 문서의 내용 추출
+            for filename in filenames:
+                print(f"- {filename} 처리 중...")
+                content = self.extract_document_content(filename)
+                if content:
+                    # HTML 태그 제거
+                    if content.strip().startswith('<'):
+                        soup = BeautifulSoup(content, 'html.parser')
+                        content = soup.get_text(separator='\n', strip=True)
+                    all_content.append(f"[문서: {filename}]\n{content}")
+                else:
+                    print(f"경고: {filename}에서 내용을 추출할 수 없습니다.")
             
-            print("2. 내용 요약 중...")
-            summary = self.summarize(document_content)
+            if not all_content:
+                raise ValueError("어떤 문서에서도 내용을 추출할 수 없습니다.")
             
-            return summary
+            # 모든 문서 내용을 하나로 합침
+            combined_content = "\n\n---\n\n".join(all_content)
+            
+            print("2. 통합 내용 요약 중...")
+            # 프롬프트 생성 및 LLM 호출
+            prompt = self.prompt_template.format(document_content=combined_content)
+            messages = [HumanMessage(content=prompt)]
+            response = self.llm.invoke(messages)
+            
+            return response.content
             
         except Exception as e:
             raise Exception(f"문서 처리 중 오류 발생: {str(e)}")
@@ -111,9 +113,14 @@ class DocumentSummarizer:
 # Example usage
 if __name__ == "__main__":
     try:
-        filename = "Dataset/meatbox/meatbox_explain.pdf"
+        # 여러 파일 처리 예시
+        filenames = [
+            "Dataset/meatbox/meatbox_explain.pdf",
+            "Dataset/meatbox/meatbox_IR.pdf",  # 예시 파일명
+        ]
+        
         summarizer = DocumentSummarizer()
-        summary = summarizer.process_document(filename)
+        summary = summarizer.process_documents(filenames)
         
         print("\n=== 요약 결과 ===")
         print(summary)
