@@ -68,8 +68,18 @@ Test files are available in:
 ### 1. Agents (`agents/`)
 Core AI components that handle company analysis and evaluation:
 - `test.ipynb`: Main test notebook for evaluating the platform
-- `checklist_reviewer_new.py`: AI agent for company evaluation
-- `sell_side_agent.py`: Agent for company information retrieval
+- `checklist_reviewer_new.py`: Analyzes the acquirer's input query and determines the relative importance of each evaluation criterion.
+It assigns a score within a predefined range for each item, reflecting how strongly it was emphasized.
+Unmentioned but domain-critical factors are still included with minimum scores.
+
+- `sell_side_agent.py`: Acts as the virtual representative of the target company.
+It retrieves structured data from the internal database and supplements missing context from public sources.
+It answers investor questions about revenue, growth, funding history, profitability, and more.
+
+- `checklist_inspector.py`: Aggregates all available data (DB, sell-side answers, external content) and scores the company
+based on how well it matches each checklist item.
+Requests clarification if information is missing or ambiguous to ensure accurate scoring.
+
 - `web_surfer.py`: Web content analysis agent
 
 ### 2. Graph (`graph/`)
