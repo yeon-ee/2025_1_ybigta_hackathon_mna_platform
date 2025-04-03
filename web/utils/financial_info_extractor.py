@@ -365,9 +365,10 @@ def add_new_company(pdf_path, user_input, company_name=None, company_info=None):
 if __name__ == "__main__":
     print("\n=== 기업 정보 추출 프로그램 시작 ===")
     # 고정된 파일 경로 사용
-    pdf_path = "Dataset/meatbox/meatbox_finance.pdf"
+    pdf_path = "./meatbox_finance.pdf"
+    user_input = {'company_name': '인공지능 솔루션을 개발하는 스타트업', 'category': '모빌리티/교통', 'capital': 2, 'investment': 3, 'investment_count': 4, 'annual_sales': 5, 'tech_grade': 'B-'}
     
-    success, result = add_new_company(pdf_path)
+    success, result = add_new_company(pdf_path, user_input)
     
     if success:
         print("\n프로그램이 성공적으로 완료되었습니다.")
