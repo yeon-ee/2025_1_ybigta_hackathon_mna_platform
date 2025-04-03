@@ -13,7 +13,7 @@ chroma_path = os.path.join(web_root, "db", "chroma_data")
 
 from web.db.vector_db import connect_to_vector_db
 from web.utils.report import process_input_to_report
-from web.utils.save_factory import save_image_to_vector_db
+from web.utils.save_company import save_image_to_vector_db
 
 st.set_page_config(
     page_title="M&A_Agent",

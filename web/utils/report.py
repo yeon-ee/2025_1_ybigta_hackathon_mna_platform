@@ -8,6 +8,7 @@ def process_input_to_report(input_string):
     company_names = [company['company_name'] for company in companies]
 
     print("companies:"+ company_names.__str__())
+    print("-" * 50)
     return company_names
     # return json.dumps({"user_input": input_string}, ensure_ascii=False)
 
