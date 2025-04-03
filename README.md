@@ -169,8 +169,6 @@ evaluator = ChecklistReviewer(api_key=SOLAR_API_KEY)
 evaluation = evaluator.review_company(company_data)
 ```
 
-## License
-MIT License
 
 ## Contact
 For support and inquiries, please contact the project maintainers.
