@@ -1,8 +1,8 @@
 from langchain_core.messages import AIMessage
 from langgraph.prebuilt import create_react_agent
-from config import llm_b
-from tools import fetch_from_db, search_web
-from state import State
+from .config import llm_b
+from .tools import fetch_from_db, search_web
+from .state import State
 
 sellside_prompt = """
     당신은 친절한 AI 에이전트입니다.

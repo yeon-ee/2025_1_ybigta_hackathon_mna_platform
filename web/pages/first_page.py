@@ -21,6 +21,42 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+def display_companies(results):
+    # 회사별 총점 계산 및 정렬
+    companies_with_scores = []
+    for company_name, data in results.items():
+        total_score = sum(data['score'].values())
+        companies_with_scores.append((company_name, data, total_score))
+
+    sorted_companies = sorted(companies_with_scores, key=lambda x: x[2], reverse=True)
+
+    # 두 개의 회사씩 나란히 표시
+    for i in range(0, len(sorted_companies), 2):
+        cols = st.columns(2, gap="large")
+
+        # 왼쪽 칼럼
+        with cols[0]:
+            company_name, data, total_score = sorted_companies[i]
+            with st.container():
+                st.markdown(f"# {i + 1}위: {company_name}")
+                st.markdown(f"## 총점: {total_score}점")
+
+                for criterion in data['score'].keys():
+                    with st.expander(f"{criterion} (점수: {data['score'][criterion]}점)"):
+                        st.markdown(data['comment'][criterion])
+
+        # 오른쪽 칼럼 (남은 회사가 있을 경우)
+        if i + 1 < len(sorted_companies):
+            with cols[1]:
+                company_name, data, total_score = sorted_companies[i + 1]
+                with st.container():
+                    st.markdown(f"# {i + 2}위: {company_name}")
+                    st.markdown(f"## 총점: {total_score}점")
+
+                    for criterion in data['score'].keys():
+                        with st.expander(f"{criterion} (점수: {data['score'][criterion]}점)"):
+                            st.markdown(data['comment'][criterion])
+
 
 if 'chroma_collection' not in st.session_state:
     st.session_state.chroma_collection = connect_to_vector_db()
@@ -64,7 +100,8 @@ with tab1:
     # 2. 검색 후 화면
     else:
         st.success("처리가 완료되었습니다!")
-        st.json(st.session_state.search_result)
+        display_companies(st.session_state.search_result)
+
 
         if st.button("다시 검색"):
             st.session_state.search_completed = False
@@ -203,7 +240,7 @@ with tab2:
 
             result, metadata = extract_company_info(non_financial_pdfs, financial_pdf, user_input)
             st.success("성공적으로 저장되었습니다!")
-            st.json(metadata)
+            # st.json(metadata)
         except Exception as e:
             st.error(f"저장 중 오류가 발생했습니다: {str(e)}")
 

@@ -2,10 +2,10 @@ import json
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 
-from state import State
-from sellside import sellside_node
-from questioner import questioner_node
-from inspector import inspector_node
+from .state import State
+from .sellside import sellside_node
+from .questioner import questioner_node
+from .inspector import inspector_node
 
 def qustioner_router(state: State) -> str:
     if state["sender"] == "questioner" and "INSPECT" in state["messages"][-1].content:

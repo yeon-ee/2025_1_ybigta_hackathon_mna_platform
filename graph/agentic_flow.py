@@ -1,7 +1,7 @@
 from langchain_core.runnables import RunnableConfig
 from langchain_teddynote.messages import random_uuid
 import json
-from graph import create_workflow
+from .graph import create_workflow
 
 def agentic_flow(company_name: str, user_query: str, checklist: dict) -> dict:
     try:

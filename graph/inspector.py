@@ -1,7 +1,7 @@
 from langchain_core.messages import AIMessage
 from langgraph.prebuilt import create_react_agent
-from config import llm_a
-from state import State
+from .config import llm_a
+from .state import State
 
 inspector_prompt = """
     당신은 유능한 AI agent입니다.
