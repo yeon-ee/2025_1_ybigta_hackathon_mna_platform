@@ -46,7 +46,7 @@ class DocumentSummarizer:
         :param api_key: Upstage API 키
         """
         self.api_key = api_key or os.getenv("SOLAR_API_KEY")
-        self.llm = ChatUpstage(api_key=self.api_key, model=llm_model)
+        self.llm = ChatUpstage(api_key=self.api_key, model=llm_model, temperature=0.01)
         self.prompt_template = PromptTemplate(
             input_variables=["document_content"],
             template=DocumentSummarizer_prompt
