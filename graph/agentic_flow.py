@@ -1,6 +1,5 @@
 from langchain_core.runnables import RunnableConfig
-from langchain_teddynote.messages import random_uuid, invoke_graph
-from langchain_teddynote.graphs import visualize_graph
+from langchain_teddynote.messages import random_uuid
 import json
 from graph import create_workflow
 
@@ -32,6 +31,7 @@ def agentic_flow(company_name: str, user_query: str, checklist: dict) -> dict:
             "score": {"항목": 0},
             "comment": {"항목": "JSON decoding failed."},
         }
+    print("Result:", result)
     return result
 
 if __name__ == "__main__":
