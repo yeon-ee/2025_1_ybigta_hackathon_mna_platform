@@ -2,6 +2,8 @@ import os
 import tempfile
 from pathlib import Path
 
+from web.db.company_embed import get_passage_embedding
+from web.db.vector_db import save_to_vector_db
 from web.utils.document_parse import DocumentSummarizer
 from web.utils.financial_info_extractor import add_new_company
 
@@ -68,6 +70,8 @@ def extract_company_info(non_financial_pdfs, financial_pdf, user_input):
         summary = summarizer.process_documents(non_financial_paths)
         print("summary: " + summary)
 
+        save_company(user_input.get("company_name"), summary)
+
         success, info_extract_result = add_new_company(financial_path, user_input)
         print("info_extract_result: " + str(info_extract_result))
 
@@ -81,6 +85,18 @@ def extract_company_info(non_financial_pdfs, financial_pdf, user_input):
             except:
                 pass
 
+def save_company(company_name,summary):
+    # 임베딩 생성
+    embedding = get_passage_embedding(summary)
+
+    embeddings = []
+    company_names = []
+    if embedding is not None:
+        embeddings.append(embedding)
+        company_names.append(company_name)
+        print(f"'{company_name}' 처리 완료")
+
+    save_to_vector_db(company_names, embeddings)
 
 if __name__ == "__main__":
     result, metadata = load_test_pdfs(
