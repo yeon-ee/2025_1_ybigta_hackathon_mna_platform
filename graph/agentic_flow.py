@@ -31,6 +31,7 @@ def agentic_flow(company_name: str, user_query: str, checklist: dict) -> dict:
             "score": {"항목": 0},
             "comment": {"항목": "JSON decoding failed."},
         }
+    print("Result:", result)
     return result
 
 if __name__ == "__main__":
