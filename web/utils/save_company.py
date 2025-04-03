@@ -23,11 +23,11 @@ def load_test_pdfs(non_financial_dir: str, financial_dir: str):
     test_input = {"test": "data"}
 
     # 실제 함수 호출
-    return save_image_to_vector_db(non_financial_pdfs, financial_pdf, test_input)
+    return extract_company_info(non_financial_pdfs, financial_pdf, test_input)
 
 
 # 매도자: 예제 함수를 정의 (이미지를 벡터 DB에 저장)
-def save_image_to_vector_db(non_financial_pdfs, financial_pdf, user_input):
+def extract_company_info(non_financial_pdfs, financial_pdf, user_input):
 
     return "asdfasdfasdf", {"asdfs":"sdafdsf"}
 
