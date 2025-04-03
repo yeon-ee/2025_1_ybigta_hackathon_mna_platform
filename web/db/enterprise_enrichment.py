@@ -6,7 +6,7 @@ import os
 # 파일 로드
 # ----------------------------
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-input_file = os.path.join(base_dir, 'json', 'inno_company_with_ev.json')
+input_file = os.path.join(base_dir, 'db','json', 'inno_company_with_ev.json')
 
 with open(input_file, 'r', encoding='utf-8') as f:
     data = json.load(f)
@@ -77,9 +77,9 @@ for company in data:
 # ----------------------------
 # 저장
 # ----------------------------
-output_file = os.path.join(base_dir, 'json', 'inno_company_with_ev_financial.json')
+output_file = os.path.join(base_dir,'db', 'json', 'inno_company_with_ev_financial.json')
 
 with open(output_file, 'w', encoding='utf-8') as f:
     json.dump(data, f, ensure_ascii=False, indent=4)
 
-print("✅ inno_company_with_ev_financial.json 생성 완료 (EV + 재무비율 + 수익성등급 포함)")
+print("[OK] inno_company_with_ev_financial.json 생성 완료 (EV + 재무비율 + 수익성등급 포함)")

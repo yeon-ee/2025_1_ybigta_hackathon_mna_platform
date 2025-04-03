@@ -202,12 +202,19 @@ def add_new_company(pdf_path, user_input, company_name=None, company_info=None):
         
         if not formatted_result:
             print(f"❌ 오류: {pdf_path}에서 재무 데이터를 추출할 수 없습니다")
-            return False
+            return False, None
         print("   ✓ 데이터 포맷팅 완료")
         
         # inno_company.json 파일 읽기
         print("4. 기존 기업 데이터 로딩 중...")
-        inno_company_path = '../db/json/inno_company_with_ev_financial.json'
+        current_dir = os.path.dirname(os.path.abspath(__file__))  # web/utils
+        inno_company_path = os.path.join(current_dir, '..', 'db', 'json', 'inno_company.json')
+        print(f"   JSON 파일 경로: {inno_company_path}")
+        
+        if not os.path.exists(inno_company_path):
+            print(f"❌ 오류: 파일을 찾을 수 없습니다: {inno_company_path}")
+            return False, None
+            
         with open(inno_company_path, 'r', encoding='utf-8') as f:
             companies = json.load(f)
         print("   ✓ 기존 데이터 로딩 완료")
@@ -217,60 +224,44 @@ def add_new_company(pdf_path, user_input, company_name=None, company_info=None):
             company_info = {}
         
         if company_name is None:
-            company_name = get_user_input("기업명: ", allow_empty=False)
+            company_name = user_input.get('company_name', '')
         
         # 기본 정보 입력
-        url = get_user_input("기업 URL: ")
-        intro = get_user_input("기업 소개: ")
-        listing = get_user_input("상장여부 (상장/비상장): ")
-        founded_date = get_user_input("설립일 (YYYY-MM-DD): ")
-        website = get_user_input("홈페이지 URL: ")
-        address = get_user_input("주소: ")
-        categories = get_list_input("카테고리 (예: 금융/보험/핀테크, AI/딥테크/블록체인)")
+        url = user_input.get('url', '')
+        intro = user_input.get('intro', '')
+        listing = user_input.get('listing', '')
+        founded_date = user_input.get('founded_date', '')
+        website = user_input.get('website', '')
+        address = user_input.get('address', '')
+        categories = [user_input.get('category', '')] if user_input.get('category') else []
         
         # 투자 정보 입력
         print("\n=== 투자 정보 입력 ===")
-        investment_stage = get_user_input("최종투자단계 (예: Series A, Pre-A): ")
-        investment_amount = get_user_input("누적투자유치금액 (예: 100억원): ")
-        investment_count = get_user_input("투자유치건수: ")
+        investment_stage = user_input.get('investment_stage', '')
+        investment_amount = user_input.get('investment', '')
+        investment_count = user_input.get('investment_count', '')
         
-        # 투자 이력 입력
+        # 투자 이력, 보도자료 URL, 특허 목록은 빈 리스트로 처리
         investment_history = []
-        print("\n투자유치이력 입력 (완료하려면 빈 줄 입력)")
-        while True:
-            date = get_user_input("\n투자일자 (YYYY-MM-DD) [입력 완료: 엔터]: ")
-            if not date:
-                break
-            stage = get_user_input("투자단계: ")
-            amount = get_user_input("투자금액: ")
-            investors = get_list_input("투자자 (쉼표로 구분)")
-            
-            if date:  # 날짜가 입력된 경우에만 이력 추가
-                investment_history.append({
-                    "날짜": date,
-                    "단계": stage,
-                    "금액": amount,
-                    "투자자": investors
-                })
-        
-        # 보도자료 URL 입력
-        news_urls = get_list_input("\n보도자료 URL (쉼표로 구분)")
-        
-        # 특허 목록 입력
-        patents = get_list_input("\n특허명칭 (쉼표로 구분)")
+        news_urls = []
+        patents = []
         
         print("\n5. 새 기업 정보 생성 중...")
         # 새 기업 정보 생성
         new_company = {
-            "url": url or company_info.get("url", ""),
+            "url": url,
             "기업명": company_name,
-            "기업소개": intro or company_info.get("소개", ""),
-            "상장여부": listing or company_info.get("상장여부", ""),
-            "설립일": founded_date or company_info.get("설립일", ""),
-            "홈페이지": website or company_info.get("웹사이트", ""),
-            "주소": address or company_info.get("주소", ""),
-            "카테고리": categories or company_info.get("카테고리", []),
-            "주요정보": company_info.get("주요정보", {}),
+            "기업소개": intro,
+            "상장여부": listing,
+            "설립일": founded_date,
+            "홈페이지": website,
+            "주소": address,
+            "카테고리": categories,
+            "주요정보": {
+                "자본금": user_input.get('capital', ''),
+                "연매출": user_input.get('annual_sales', ''),
+                "기술등급": user_input.get('tech_grade', '')
+            },
             "투자유치정보": {
                 "최종투자단계": investment_stage,
                 "누적투자유치금액": investment_amount,
@@ -279,8 +270,8 @@ def add_new_company(pdf_path, user_input, company_name=None, company_info=None):
             },
             "손익": formatted_result['손익'],
             "재무": formatted_result['재무'],
-            "보도자료": news_urls or company_info.get("보도자료", []),
-            "특허명칭리스트": patents or company_info.get("특허", [])
+            "보도자료": news_urls,
+            "특허명칭리스트": patents
         }
         print("   ✓ 새 기업 정보 생성 완료")
         
@@ -296,12 +287,12 @@ def add_new_company(pdf_path, user_input, company_name=None, company_info=None):
         print("7. 기업가치 계산 및 재무비율 분석 중...")
         try:
             # 프로젝트 루트 디렉토리 경로 계산
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.dirname(current_dir)  # UserRegistration의 상위 디렉토리가 프로젝트 루트
+            current_dir = os.path.dirname(os.path.abspath(__file__))  # web/utils
+            project_root = os.path.dirname(current_dir)  # web
             
             # enterprise_value.py와 enterprise_enrichment.py 경로
-            enterprise_value_path = os.path.join(project_root, 'preprocess', 'enterprise_value.py')
-            enterprise_enrichment_path = os.path.join(project_root, 'preprocess', 'enterprise_enrichment.py')
+            enterprise_value_path = os.path.join(project_root, 'db', 'enterprise_value.py')
+            enterprise_enrichment_path = os.path.join(project_root, 'db', 'enterprise_enrichment.py')
             
             if not os.path.exists(enterprise_value_path):
                 raise FileNotFoundError(f"enterprise_value.py를 찾을 수 없습니다: {enterprise_value_path}")
@@ -310,7 +301,7 @@ def add_new_company(pdf_path, user_input, company_name=None, company_info=None):
             
             # 현재 작업 디렉토리를 프로젝트 루트로 변경
             original_dir = os.getcwd()
-            os.chdir(project_root)
+            os.chdir(project_root)  # web 디렉토리로 이동
             
             try:
                 # 1. 기업가치 계산
@@ -338,7 +329,7 @@ def add_new_company(pdf_path, user_input, company_name=None, company_info=None):
                     print(f"      출력: {result.stdout}")
                     
             finally:
-                os.chdir(original_dir)
+                os.chdir(original_dir)  # 원래 디렉토리로 복귀
                 
         except FileNotFoundError as e:
             print(f"   ⚠️ 파일 찾기 오류: {str(e)}")
@@ -351,7 +342,6 @@ def add_new_company(pdf_path, user_input, company_name=None, company_info=None):
             if e.stderr:
                 print(f"   에러: {e.stderr}")
             return False, None
-
         
         print(f"\n✅ 성공: {company_name} 추가 및 기업가치 계산 완료")
         return True, new_company
@@ -360,13 +350,30 @@ def add_new_company(pdf_path, user_input, company_name=None, company_info=None):
         print(f"\n❌ 오류 발생: {str(e)}")
         return False, None
 
-
 # 메인 실행 코드
 if __name__ == "__main__":
     print("\n=== 기업 정보 추출 프로그램 시작 ===")
-    # 고정된 파일 경로 사용
-    pdf_path = "./meatbox_finance.pdf"
-    user_input = {'company_name': '인공지능 솔루션을 개발하는 스타트업', 'category': '모빌리티/교통', 'capital': 2, 'investment': 3, 'investment_count': 4, 'annual_sales': 5, 'tech_grade': 'B-'}
+    # 현재 파일의 디렉토리 경로를 기준으로 PDF 파일 경로 설정
+    pdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             'meatbox_finance.pdf')
+    print(f"PDF 파일 경로: {pdf_path}")
+    
+    user_input = {
+        'company_name': '인공지능 솔루션을 개발하는 스타트업',
+        'category': '모빌리티/교통',
+        'capital': 2,
+        'investment': 3,
+        'investment_count': 4,
+        'annual_sales': 5,
+        'tech_grade': 'B-',
+        'url': '',
+        'intro': '',
+        'listing': '',
+        'founded_date': '',
+        'website': '',
+        'address': '',
+        'investment_stage': ''
+    }
     
     success, result = add_new_company(pdf_path, user_input)
     

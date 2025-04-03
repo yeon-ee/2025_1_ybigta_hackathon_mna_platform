@@ -30,7 +30,7 @@ stage_multiples = {
 # 파일 로드
 # ----------------------------
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-open_file = os.path.join(base_dir, 'json', 'inno_company.json')
+open_file = os.path.join(base_dir,'db', 'json', 'inno_company.json')
 
 with open(open_file, 'r', encoding='utf-8') as f:
     data = json.load(f)
@@ -123,11 +123,11 @@ for company in data:
 # ----------------------------
 # 저장
 # ----------------------------
-output_file = os.path.join(base_dir, 'json', 'inno_company_with_ev.json')
+output_file = os.path.join(base_dir,'db' ,'json', 'inno_company_with_ev.json')
 
 with open(output_file, 'w', encoding='utf-8') as f:
     json.dump(data, f, ensure_ascii=False, indent=4)
 
-print("✅ 기업가치 추가 완료 → inno_company_with_ev.json 생성")
+print("[OK] 기업가치 추가 완료 → inno_company_with_ev.json 생성")
 
 

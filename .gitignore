@@ -164,6 +164,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+upstage/
 
 # Spyder project settings
 .spyderproject
