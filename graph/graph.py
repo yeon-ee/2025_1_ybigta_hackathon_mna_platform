@@ -17,9 +17,6 @@ def inspector_router(state: State) -> str:
     if state["sender"] == "checklist_inspector" and "REQUEST" in state["messages"][-1].content:
         return "questioner"
     elif state["sender"] == "checklist_inspector" and "score" in state["messages"][-1].content:
-        data = json.loads(state["messages"][-1].content)
-        state["score"] = data["score"]
-        state["final_comment"] = data["comment"]
         return END
     else:
         return "checklist_inspector"
